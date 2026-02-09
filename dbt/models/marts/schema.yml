@@ -1,0 +1,68 @@
+version: 2
+
+models:
+  - name: fct_user_journey
+    description: "One row per user with funnel progression flags, event counts, and purchase details"
+    columns:
+      - name: user_id
+        description: "Unique user identifier"
+        tests:
+          - unique
+          - not_null
+      - name: reached_page_view
+        description: "Whether user had at least one page view"
+        tests:
+          - not_null
+      - name: reached_signup
+        description: "Whether user completed signup"
+        tests:
+          - not_null
+      - name: reached_purchase
+        description: "Whether user completed a purchase"
+        tests:
+          - not_null
+      - name: is_converted
+        description: "Whether user converted (completed purchase)"
+        tests:
+          - not_null
+      - name: total_events
+        description: "Total number of events for this user"
+        tests:
+          - not_null
+
+  - name: fct_funnel
+    description: "Aggregate funnel metrics showing conversion rates at each stage"
+    columns:
+      - name: step
+        description: "Funnel step name (page_view, signup, purchase)"
+        tests:
+          - not_null
+          - accepted_values:
+              values: ["page_view", "signup", "purchase"]
+      - name: step_order
+        description: "Numeric ordering of funnel steps"
+        tests:
+          - not_null
+          - unique
+      - name: users_reached
+        description: "Number of users who reached this step"
+        tests:
+          - not_null
+      - name: conversion_rate_pct
+        description: "Percentage of total users who reached this step"
+        tests:
+          - not_null
+
+  - name: fct_experiment_results
+    description: "Per-variant metrics for A/B experiment analysis"
+    columns:
+      - name: experiment_id
+        description: "Experiment identifier"
+      - name: variant
+        description: "Variant name (control, treatment)"
+      - name: users
+        description: "Number of users in this variant"
+      - name: conversions
+        description: "Number of conversions in this variant"
+      - name: conversion_rate
+        description: "Conversion rate for this variant"
