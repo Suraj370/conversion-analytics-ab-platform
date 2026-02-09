@@ -14,6 +14,10 @@ This system demonstrates a production-grade approach to:
 
 All components run locally with no paid services or cloud dependencies.
 
+## Dashboard
+
+![Analytics Dashboard](docs/dashboard-screenshot.png)
+
 ## Architecture
 
 ```
