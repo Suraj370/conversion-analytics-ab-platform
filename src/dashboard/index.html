@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analytics Dashboard — startup-analytics-ab</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #0f1117;
+            color: #e1e4e8;
+            padding: 2rem;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+        h1 { font-size: 1.8rem; margin-bottom: 0.5rem; }
+        h2 { font-size: 1.3rem; margin-bottom: 1rem; color: #79b8ff; }
+        .subtitle { color: #6a737d; margin-bottom: 2rem; }
+        .section { margin-bottom: 3rem; }
+
+        /* Cards */
+        .card {
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        /* Event summary grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        .stat-box {
+            background: #1c2128;
+            border-radius: 6px;
+            padding: 1rem;
+            text-align: center;
+        }
+        .stat-box .value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #58a6ff;
+        }
+        .stat-box .label {
+            font-size: 0.85rem;
+            color: #8b949e;
+            margin-top: 0.3rem;
+        }
+
+        /* Funnel */
+        .funnel-step {
+            display: flex;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+        .funnel-label {
+            width: 120px;
+            font-weight: 600;
+            text-transform: capitalize;
+            flex-shrink: 0;
+        }
+        .funnel-bar-bg {
+            flex: 1;
+            height: 36px;
+            background: #21262d;
+            border-radius: 4px;
+            overflow: hidden;
+            position: relative;
+        }
+        .funnel-bar {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.6s ease;
+            display: flex;
+            align-items: center;
+            padding-left: 12px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #fff;
+        }
+        .funnel-bar.step-0 { background: #238636; }
+        .funnel-bar.step-1 { background: #1f6feb; }
+        .funnel-bar.step-2 { background: #8957e5; }
+        .funnel-meta {
+            width: 100px;
+            text-align: right;
+            font-size: 0.85rem;
+            color: #8b949e;
+            margin-left: 12px;
+            flex-shrink: 0;
+        }
+
+        /* Variant comparison */
+        .variant-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+        .variant-label {
+            width: 120px;
+            font-weight: 600;
+            text-transform: capitalize;
+            flex-shrink: 0;
+        }
+        .variant-bar-bg {
+            flex: 1;
+            height: 36px;
+            background: #21262d;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .variant-bar {
+            height: 100%;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            padding-left: 12px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #fff;
+            transition: width 0.6s ease;
+        }
+        .variant-bar.control { background: #6e7681; }
+        .variant-bar.treatment { background: #1f6feb; }
+        .variant-meta {
+            width: 160px;
+            text-align: right;
+            font-size: 0.85rem;
+            color: #8b949e;
+            margin-left: 12px;
+            flex-shrink: 0;
+        }
+
+        /* Decision badge */
+        .decision {
+            display: inline-block;
+            padding: 0.4rem 1rem;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 1rem;
+            margin: 0.75rem 0;
+        }
+        .decision.ship { background: #238636; color: #fff; }
+        .decision.no-ship { background: #da3633; color: #fff; }
+        .decision.inconclusive { background: #d29922; color: #000; }
+
+        .analysis-detail {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 0.75rem;
+            margin-top: 1rem;
+        }
+        .analysis-detail .stat-box .value { font-size: 1.2rem; }
+
+        .reason {
+            margin-top: 1rem;
+            padding: 1rem;
+            background: #1c2128;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            color: #c9d1d9;
+        }
+
+        .loading { text-align: center; padding: 2rem; color: #6a737d; }
+        .error { color: #f85149; padding: 1rem; }
+    </style>
+</head>
+<body>
+    <h1>Analytics Dashboard</h1>
+    <p class="subtitle">startup-analytics-ab &mdash; local-first analytics + A/B experimentation</p>
+
+    <div id="app">
+        <div class="loading">Loading dashboard data...</div>
+    </div>
+
+    <script>
+    (async function() {
+        const app = document.getElementById('app');
+
+        try {
+            const resp = await fetch('data.json');
+            if (!resp.ok) throw new Error(`Failed to load data.json (${resp.status}). Run: python -m src.analysis.export`);
+            const data = await resp.json();
+            app.innerHTML = '';
+            renderEventSummary(app, data.event_summary);
+            renderFunnel(app, data.funnel);
+            renderExperiments(app, data.experiments);
+        } catch (err) {
+            app.innerHTML = `<div class="error"><strong>Error:</strong> ${err.message}</div>`;
+        }
+
+        function renderEventSummary(container, summary) {
+            if (!summary || !summary.length) return;
+            const section = el('div', 'section');
+            section.appendChild(el('h2', '', 'Event Overview'));
+            const card = el('div', 'card');
+            const grid = el('div', 'stats-grid');
+
+            const totalEvents = summary.reduce((s, e) => s + e.count, 0);
+            const totalUsers = Math.max(...summary.map(e => e.unique_users));
+            grid.appendChild(statBox(fmt(totalEvents), 'Total Events'));
+            grid.appendChild(statBox(fmt(totalUsers), 'Unique Users'));
+
+            for (const item of summary) {
+                grid.appendChild(statBox(fmt(item.count), item.event_type.replace('_', ' ')));
+            }
+            card.appendChild(grid);
+            section.appendChild(card);
+            container.appendChild(section);
+        }
+
+        function renderFunnel(container, funnel) {
+            if (!funnel || !funnel.length) return;
+            const section = el('div', 'section');
+            section.appendChild(el('h2', '', 'Conversion Funnel'));
+            const card = el('div', 'card');
+
+            const maxUsers = funnel[0].users;
+            funnel.forEach((step, i) => {
+                const row = el('div', 'funnel-step');
+                row.appendChild(el('div', 'funnel-label', step.step.replace('_', ' ')));
+
+                const barBg = el('div', 'funnel-bar-bg');
+                const bar = el('div', `funnel-bar step-${i}`);
+                const pct = maxUsers > 0 ? (step.users / maxUsers * 100) : 0;
+                bar.style.width = Math.max(pct, 2) + '%';
+                bar.textContent = fmt(step.users);
+                barBg.appendChild(bar);
+                row.appendChild(barBg);
+
+                const meta = el('div', 'funnel-meta');
+                meta.textContent = step.conversion_rate_pct + '% overall';
+                row.appendChild(meta);
+
+                card.appendChild(row);
+            });
+
+            section.appendChild(card);
+            container.appendChild(section);
+        }
+
+        function renderExperiments(container, experiments) {
+            if (!experiments || !experiments.length) return;
+            const section = el('div', 'section');
+            section.appendChild(el('h2', '', 'A/B Experiment Results'));
+
+            for (const exp of experiments) {
+                const card = el('div', 'card');
+                card.appendChild(el('h2', '', exp.experiment_id));
+
+                // Variant bars
+                const maxRate = Math.max(...exp.variants.map(v => v.conversion_rate));
+                for (const v of exp.variants) {
+                    const row = el('div', 'variant-row');
+                    row.appendChild(el('div', 'variant-label', v.name));
+
+                    const barBg = el('div', 'variant-bar-bg');
+                    const bar = el('div', `variant-bar ${v.name}`);
+                    const pct = maxRate > 0 ? (v.conversion_rate / maxRate * 100) : 0;
+                    bar.style.width = Math.max(pct, 2) + '%';
+                    bar.textContent = (v.conversion_rate * 100).toFixed(2) + '%';
+                    barBg.appendChild(bar);
+                    row.appendChild(barBg);
+
+                    const meta = el('div', 'variant-meta');
+                    meta.textContent = `${v.conversions}/${v.users} users`;
+                    row.appendChild(meta);
+
+                    card.appendChild(row);
+                }
+
+                // Analysis results
+                if (exp.analysis) {
+                    const a = exp.analysis;
+                    const decClass = a.decision === 'SHIP' ? 'ship'
+                        : a.decision === 'INCONCLUSIVE' ? 'inconclusive' : 'no-ship';
+                    const badge = el('div', `decision ${decClass}`, a.decision);
+                    card.appendChild(badge);
+
+                    const detail = el('div', 'analysis-detail');
+                    detail.appendChild(statBox((a.relative_uplift * 100).toFixed(1) + '%', 'Relative Uplift'));
+                    detail.appendChild(statBox(a.p_value.toFixed(4), 'p-value'));
+                    detail.appendChild(statBox(
+                        `[${(a.ci_lower * 100).toFixed(2)}, ${(a.ci_upper * 100).toFixed(2)}]pp`,
+                        '95% CI'
+                    ));
+                    detail.appendChild(statBox(a.is_significant ? 'YES' : 'NO', 'Significant'));
+                    card.appendChild(detail);
+
+                    const reason = el('div', 'reason', a.reason);
+                    card.appendChild(reason);
+                }
+
+                section.appendChild(card);
+            }
+            container.appendChild(section);
+        }
+
+        // Helpers
+        function el(tag, className, text) {
+            const e = document.createElement(tag);
+            if (className) e.className = className;
+            if (text) e.textContent = text;
+            return e;
+        }
+
+        function statBox(value, label) {
+            const box = el('div', 'stat-box');
+            box.appendChild(el('div', 'value', value));
+            box.appendChild(el('div', 'label', label));
+            return box;
+        }
+
+        function fmt(n) {
+            return n.toLocaleString();
+        }
+    })();
+    </script>
+</body>
+</html>

@@ -36,5 +36,8 @@ Thumbs.db
 .env
 .env.local
 
+# Generated dashboard data
+src/dashboard/data.json
+
 # Project-specific
 CLAUDE_CODE_MASTER_PROMPT.md

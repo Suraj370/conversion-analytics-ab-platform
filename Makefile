@@ -1,4 +1,4 @@
-.PHONY: install run-collector simulate transform analyze dashboard test lint clean
+.PHONY: install run-collector simulate transform analyze export dashboard test lint clean demo
 
 # Python environment
 PYTHON := python
@@ -13,7 +13,7 @@ run-collector:
 
 # User simulator
 simulate:
-	$(PYTHON) -m src.simulator.generate
+	$(PYTHON) -m src.simulator.generate --experiment
 
 # dbt transformations
 transform:
@@ -23,9 +23,17 @@ transform:
 analyze:
 	$(PYTHON) -m src.analysis.run
 
-# Dashboard
-dashboard:
+# Export dashboard data
+export:
+	$(PYTHON) -m src.analysis.export
+
+# Dashboard (run export first to generate data.json)
+dashboard: export
+	@echo "Dashboard available at http://localhost:8080"
 	$(PYTHON) -m http.server 8080 --directory src/dashboard
+
+# Full demo: simulate -> export -> analyze
+demo: simulate export analyze
 
 # Testing
 test:
@@ -37,5 +45,6 @@ lint:
 # Cleanup
 clean:
 	rm -f data/*.duckdb
+	rm -f src/dashboard/data.json
 	rm -rf dbt/target dbt/logs
 	find . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
