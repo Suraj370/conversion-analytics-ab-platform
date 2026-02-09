@@ -1,9 +1,6 @@
 """Tests for statistical experiment analysis."""
 
-import pytest
-
 from src.analysis.stats import (
-    ExperimentResult,
     VariantStats,
     analyze_experiment,
     format_report,

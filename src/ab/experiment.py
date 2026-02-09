@@ -4,7 +4,7 @@ Each experiment has a unique ID, a list of variants with traffic weights,
 and a metric it aims to influence.
 """
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 
 @dataclass(frozen=True)

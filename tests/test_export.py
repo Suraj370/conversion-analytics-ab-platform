@@ -1,14 +1,12 @@
 """Tests for dashboard data export."""
 
 import json
-import tempfile
 from pathlib import Path
 
 import pytest
 
 from src.ab.experiment import PRICING_PAGE_EXPERIMENT
 from src.analysis.export import export_dashboard_data
-from src.collector.schemas import Event, EventType
 from src.simulator.config import SimulationConfig
 from src.simulator.engine import generate_events
 from src.warehouse.db import get_connection, init_db, insert_events
@@ -32,7 +30,7 @@ def populated_db(tmp_path):
 class TestExportDashboardData:
     def test_export_creates_json_file(self, populated_db, tmp_path):
         out = str(tmp_path / "dashboard" / "data.json")
-        data = export_dashboard_data(populated_db, out)
+        export_dashboard_data(populated_db, out)
 
         assert Path(out).exists()
         content = json.loads(Path(out).read_text())

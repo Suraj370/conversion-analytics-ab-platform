@@ -12,7 +12,7 @@ import argparse
 import json
 from pathlib import Path
 
-from src.analysis.stats import VariantStats, analyze_experiment, format_report
+from src.analysis.stats import VariantStats, analyze_experiment
 from src.warehouse.db import get_connection, init_db
 
 _FUNNEL_QUERY = """

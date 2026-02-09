@@ -3,7 +3,6 @@
 Runs the full model chain: raw_events -> stg_events -> fct_user_journey -> fct_funnel / fct_experiment_results.
 """
 
-import math
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -88,7 +87,6 @@ def db():
 
 def _evt(eid: str, uid: str, etype: str, h: float, props: dict) -> dict:
     """Helper to create event dicts for test fixtures."""
-    import json
     return {
         "event_id": eid,
         "user_id": uid,
@@ -111,27 +109,27 @@ class TestUserJourney:
         row = db.execute(
             "SELECT * FROM fct_user_journey WHERE user_id = 'user_a'"
         ).fetchdf().to_dict("records")[0]
-        assert row["reached_page_view"] == True
-        assert row["reached_signup"] == True
-        assert row["reached_purchase"] == True
-        assert row["is_converted"] == True
+        assert row["reached_page_view"]
+        assert row["reached_signup"]
+        assert row["reached_purchase"]
+        assert row["is_converted"]
 
     def test_partial_funnel_user(self, db):
         row = db.execute(
             "SELECT * FROM fct_user_journey WHERE user_id = 'user_b'"
         ).fetchdf().to_dict("records")[0]
-        assert row["reached_page_view"] == True
-        assert row["reached_signup"] == True
-        assert row["reached_purchase"] == False
-        assert row["is_converted"] == False
+        assert row["reached_page_view"]
+        assert row["reached_signup"]
+        assert not row["reached_purchase"]
+        assert not row["is_converted"]
 
     def test_page_view_only_user(self, db):
         row = db.execute(
             "SELECT * FROM fct_user_journey WHERE user_id = 'user_c'"
         ).fetchdf().to_dict("records")[0]
-        assert row["reached_page_view"] == True
-        assert row["reached_signup"] == False
-        assert row["reached_purchase"] == False
+        assert row["reached_page_view"]
+        assert not row["reached_signup"]
+        assert not row["reached_purchase"]
 
     def test_event_counts(self, db):
         row = db.execute(

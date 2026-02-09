@@ -9,7 +9,6 @@ Usage:
 """
 
 import argparse
-from pathlib import Path
 
 from src.analysis.stats import (
     ExperimentResult,

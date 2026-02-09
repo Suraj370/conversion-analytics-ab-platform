@@ -1,7 +1,5 @@
 """Tests for CI analytics validation script."""
 
-import pytest
-
 from ci.validate_analytics import validate
 
 
