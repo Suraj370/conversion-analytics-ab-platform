@@ -1,4 +1,4 @@
-# startup-analytics-ab
+# conversion-analytics-ab
 
 A zero-cost, local-first analytics and A/B experimentation platform built for startups.
 
