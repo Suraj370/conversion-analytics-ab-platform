@@ -1,0 +1,39 @@
+version: 2
+
+sources:
+  - name: raw
+    description: "Raw event data ingested by the collector service"
+    schema: main
+    tables:
+      - name: raw_events
+        description: "Append-only table of all analytics events"
+        columns:
+          - name: event_id
+            description: "Unique event identifier"
+            tests:
+              - unique
+              - not_null
+          - name: user_id
+            description: "User who triggered the event"
+            tests:
+              - not_null
+          - name: event_type
+            description: "Type of event (page_view, click, signup, purchase, experiment_assignment, custom)"
+            tests:
+              - not_null
+              - accepted_values:
+                  values:
+                    - page_view
+                    - click
+                    - signup
+                    - purchase
+                    - experiment_assignment
+                    - custom
+          - name: timestamp
+            description: "When the event occurred (UTC)"
+            tests:
+              - not_null
+          - name: properties
+            description: "Event-specific data as JSON"
+          - name: ingested_at
+            description: "When the event was written to the warehouse"

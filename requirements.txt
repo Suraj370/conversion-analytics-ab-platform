@@ -5,6 +5,9 @@ uvicorn>=0.24.0
 # Data warehouse
 duckdb>=0.9.0
 
+# dbt transformations
+dbt-duckdb>=1.7.0
+
 # Schema validation
 pydantic>=2.5.0
 

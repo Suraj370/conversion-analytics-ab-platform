@@ -1,0 +1,31 @@
+version: 2
+
+models:
+  - name: stg_events
+    description: "Staged events with extracted properties and consistent types"
+    columns:
+      - name: event_id
+        description: "Unique event identifier"
+        tests:
+          - unique
+          - not_null
+      - name: user_id
+        description: "User who triggered the event"
+        tests:
+          - not_null
+      - name: event_type
+        description: "Normalized event type"
+        tests:
+          - not_null
+          - accepted_values:
+              values:
+                - page_view
+                - click
+                - signup
+                - purchase
+                - experiment_assignment
+                - custom
+      - name: event_timestamp
+        description: "When the event occurred (UTC)"
+        tests:
+          - not_null
